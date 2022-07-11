@@ -18,18 +18,21 @@
     <ClCompile Include="BinarySerializer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Tests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ByteStream.h">
+    <ClInclude Include="Tests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Serialization.h">
+    <ClInclude Include="ByteStreams.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Deserialization.h">
+    <ClInclude Include="Serialize.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TemplateConcepts.h">
+    <ClInclude Include="Deserialize.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

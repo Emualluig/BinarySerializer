@@ -117,6 +117,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -141,12 +142,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="BinarySerializer.cpp" />
+    <ClCompile Include="Tests.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ByteStream.h" />
-    <ClInclude Include="Deserialization.h" />
-    <ClInclude Include="Serialization.h" />
-    <ClInclude Include="TemplateConcepts.h" />
+    <ClInclude Include="ByteStreams.h" />
+    <ClInclude Include="Deserialize.h" />
+    <ClInclude Include="Serialize.h" />
+    <ClInclude Include="Tests.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
