@@ -82,6 +82,8 @@ public:
 };
 ```
 
+Serialize in the same order that you deserialize.
+
 Typically the serializations/deserializations are implemented recursively, since most types are aggregations of other more fundamental types. 
 
 # Limitations
