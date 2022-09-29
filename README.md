@@ -23,7 +23,7 @@ Here is a small sample for its basic usage
 auto myvec = std::vector<int>{1,2,3,4,5};
 
 // Create OutByteStream to write out data to file "vector.bin"
-OutByteStream obs = OutByteStream("vector.bin", true); // True here means that the bytes will be written to the file occasionally without calling .writeToFile
+OutByteStream obs = OutByteStream("vector.bin"); 
 
 // Serialize the data
 serialize(myvec, obs);
@@ -89,7 +89,7 @@ Typically the serializations/deserializations are implemented recursively, since
 # Limitations
 It does not type check. So if you are deserializing to the wrong type there will be an error.
 
-The serialize/deserialize does not handle pointers. Cast pointers to std::size_t for it to be serialized. Deserialize as std::size_t then cast to pointer type.
+The serialize/deserialize is not allowed for pointers. Cast pointers to std::size_t for it to be serialized. Deserialize as std::size_t then cast to pointer type.
 
 Serializing/deserializing a graph like structure will not work since the objects will not be placed back in the original memory positions. This means that pointers are invalidated. To properly serialize/deserialize a graph consider using a system where each node has a unique ID, and then simply connecting the correct IDs together after deserializing.
 
