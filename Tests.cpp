@@ -12,7 +12,8 @@ void testIntegral_Serialize_Deserialize_2() {
         constexpr const uint8_t value = 0;
         serialize(value, obs); InByteStream ibs = InByteStream(obs);
         const auto i = deserialize<uint8_t>(ibs);
-        assert(i == value); assert(ibs.isEmpty());
+        assert(i == value); 
+        assert(ibs.isEmpty());
     }
     {
         OutByteStream obs = OutByteStream("./testIntegral.bin");
@@ -638,31 +639,14 @@ void testMap_Serialize_Deserialize() {
 }
 
 void testLarge_Serialization_Deserialization() {
-    // With no file writing and no buffer flushing into the file
-    {
-        {
-            OutByteStream obs = OutByteStream("./testVector.bin", false, false);
-            std::vector<int> value = {};
-            for (int i = 0; i < 2000000; i++) {
-                value.push_back(i);
-            }
-            serialize(value, obs);
-            obs.writeToFile();
-        }
-
-        {
-            InByteStream ibs = InByteStream("./testVector.bin");
-            const auto i = deserialize<std::vector<int>>(ibs);
-        }
+    constexpr int limit = 20'000'000;
+    std::vector<int> value = {};
+    for (int i = 0; i < limit; i++) {
+        value.push_back(i);
     }
-    // With both enabled
     {
         {
-            OutByteStream obs = OutByteStream("./testVector.bin", true, true);
-            std::vector<int> value = {};
-            for (int i = 0; i < 2000000; i++) {
-                value.push_back(i);
-            }
+            OutByteStream obs = OutByteStream("./testVector.bin");
             serialize(value, obs);
             obs.writeToFile();
         }
@@ -670,6 +654,9 @@ void testLarge_Serialization_Deserialization() {
         {
             InByteStream ibs = InByteStream("./testVector.bin");
             const auto i = deserialize<std::vector<int>>(ibs);
+            for (int index = 0; index < limit; index++) {
+                assert(value[index] == i[index]);
+            }
         }
     }
 }
@@ -721,7 +708,7 @@ void runTests() {
 
     testMap_Serialize_Deserialize();
 
-    testClass_Serialize_Deserialize();
-
     testLarge_Serialization_Deserialization();
+
+    testClass_Serialize_Deserialize();
 }

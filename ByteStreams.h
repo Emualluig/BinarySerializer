@@ -10,9 +10,8 @@
 #include <map>
 #include <unordered_map>
 
+#include <filesystem>
 #include <cassert>
-#include <queue>
-#include <exception>
 #include <fstream>
 
 class OutByteStream;
@@ -48,63 +47,47 @@ constexpr const std::size_t BUFFER_REFILL_SIZE = 4096;
 
 class OutByteStream {
     friend class InByteStream;
-    const bool writeFile;
-    const bool bufferFlush;
+
     const std::string path;
-    std::queue<uint8_t> bytesBuffer;
     std::ofstream fout;
+
+    std::vector<uint8_t> bytes;
 public:
-    // WriteFile can be turned on to write the file to the specified path, bufferFlush automatically flushed the buffer to the file after a certain number of bytes
-    explicit OutByteStream(const std::string& path, bool writeFile = false, bool bufferFlush = false) noexcept : path{ path }, writeFile{ writeFile }, bufferFlush{ bufferFlush } {
-        if (writeFile) {
-            fout.open(path, std::ios::out | std::ios::binary);
+    explicit OutByteStream(const std::string& path, bool deletePath = true) noexcept : path{ path } {
+        if (deletePath) {
+            // Delete the file (will not fail if doesn't exist)
+            auto result = std::filesystem::remove(path);
         }
+        fout.open(path, std::ios::out | std::ios::binary);
+    }
+    ~OutByteStream() {
+        fout.close();
     }
     void push(uint8_t byte) noexcept {
-        bytesBuffer.push(byte);
-        if (writeFile && bufferFlush && bytesBuffer.size() >= BUFFER_REFILL_SIZE) {
+        bytes.push_back(byte);
+        if (bytes.size() >= BUFFER_REFILL_SIZE) {
             writeToFile();
         }
     }
-    // Merges the unwriten bytes from another `byteStream` into this object
-    void merge(OutByteStream& obs) noexcept {
-        assert(&obs != this); // Check that they are different objects
-        while (!obs.bytesBuffer.empty()) {
-            bytesBuffer.push(obs.bytesBuffer.front());
-            obs.bytesBuffer.pop();
-        }
-    }
-    bool isBufferEmpty() const noexcept {
-        return bytesBuffer.size() == 0;
-    }
-    // Writes the current byte buffer into the file
     void writeToFile() {
-        if (!writeFile) {
-            return;
-        }
-        // TODO: improve error handling, file reading
-        while (!bytesBuffer.empty()) {
-            uint8_t byte = bytesBuffer.front();
-            bytesBuffer.pop();
+        for (auto byte : bytes) {
             fout.write((const char*)&byte, sizeof(uint8_t));
         }
-    }
-    ~OutByteStream() {
-        if (writeFile) {
-            fout.close();
-        }
+        bytes.clear();
     }
 };
 class InByteStream {
     bool hasFile;
     std::ifstream file;
-    std::queue<uint8_t> bytesBuffer;
+
+    std::size_t front = 0;
+    std::vector<uint8_t> bytes;
 
     void readBufferUntilSize(const std::size_t bufferSize) {
         uint8_t byte = 0;
         std::size_t count = 0;
         while (file.read(reinterpret_cast<char*>(&byte), sizeof(uint8_t))) {
-            bytesBuffer.push(byte);
+            bytes.push_back(byte);
             count++;
             if (count >= bufferSize) {
                 break;
@@ -115,37 +98,33 @@ public:
     explicit InByteStream(const std::string& path) : hasFile{ true }, file{ std::ifstream(path, std::ios::binary) } {
         readBufferUntilSize(BUFFER_REFILL_SIZE);
     }
-    explicit InByteStream(const OutByteStream& byteStream) : hasFile{ false } {
-        bytesBuffer = byteStream.bytesBuffer;
+    // Invalidates the byteStream object
+    explicit InByteStream(OutByteStream& byteStream) : hasFile{ false } {
+        bytes = std::move(byteStream.bytes);
     }
     uint8_t getByte() {
         if (hasFile) {
-            if (bytesBuffer.size() == 0) {
+            if (front == bytes.size()) {
                 // we need to refill bytesBuffer
+                front = 0;
+                bytes.clear();
                 readBufferUntilSize(BUFFER_REFILL_SIZE);
             }
         }
-        if (bytesBuffer.size() == 0) {
+        if (bytes.size() == 0 && front == 0) {
             assert(false);
         }
-        uint8_t retval = bytesBuffer.front();
-        bytesBuffer.pop();
+        uint8_t retval = bytes.at(front);
+        front += 1;
         return retval;
     }
     bool isEmpty() const noexcept {
         if (hasFile) {
-            return 0 == bytesBuffer.size() && file.eof();
+            return file.eof() && (0 == bytes.size() || (front == bytes.size() - 1));
         }
         else {
-            return 0 == bytesBuffer.size();
+            return front == bytes.size();
         }
-    }
-};
-class DeserializationError : public std::exception {
-    // TODO: implement exceptions
-public:
-    virtual const char* what() const {
-        return "Deserialization Error";
     }
 };
 

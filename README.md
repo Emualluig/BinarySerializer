@@ -53,7 +53,7 @@ std::unordered_map
 
 In order for your class to be serializable/deserializable you must implement these methods
 ```C++
-void T::serialize(const T& data, OutByteStream& obs);
+void T::serialize(const T& data, OutByteStream& obs) noexcept;
 T::T(InByteStream& ibs); // This is the deserialization constructor
 ```
 
@@ -73,7 +73,7 @@ public:
         b = deserialize<int>(ibs);
         c = deserialize<int>(ibs);
     }
-    static void serialize(const TestClass& tc, OutByteStream& obs) {
+    static void serialize(const TestClass& tc, OutByteStream& obs) noexcept {
         // Use the global scope
         ::serialize(tc.a, obs);
         ::serialize(tc.b, obs);
@@ -95,4 +95,3 @@ Serializing/deserializing a graph like structure will not work since the objects
 
 # TODO
 - [ ] Improve file handling
-- [ ] Implement exceptions
